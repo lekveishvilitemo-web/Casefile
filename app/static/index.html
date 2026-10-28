@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Casefile — investigation engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520;9..144,640&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <p class="eyebrow">Evidence desk</p>
+          <h1>Casefile</h1>
+        </div>
+      </div>
+      <p class="status" id="corpus-status">Checking the corpus…</p>
+    </header>
+
+    <div class="layout">
+      <nav class="nav" aria-label="Sections">
+        <button type="button" class="nav-btn active" data-view="investigate">Investigate</button>
+        <button type="button" class="nav-btn" data-view="documents">Documents</button>
+        <button type="button" class="nav-btn" data-view="evaluation">Evaluation</button>
+        <button type="button" class="nav-btn" data-view="method">Method</button>
+      </nav>
+
+      <main>
+        <section id="view-investigate">
+          <form id="ask-form" class="ask">
+            <label for="question">Question</label>
+            <textarea id="question" name="question" rows="4" required placeholder="Which system change preceded the March payment delays, which services were hit, and which documents disagree?"></textarea>
+            <div class="ask-row">
+              <label>Chunking
+                <select id="strategy" name="chunk_strategy">
+                  <option value="sentence_pack">Sentence pack</option>
+                  <option value="fixed_window">Fixed window</option>
+                </select>
+              </label>
+              <label>Retrieval
+                <select id="retrieval" name="retrieval">
+                  <option value="hybrid">Hybrid + multi-hop</option>
+                  <option value="semantic">Semantic only</option>
+                </select>
+              </label>
+              <button type="submit" class="primary" id="ask-button">Ask the record</button>
+            </div>
+            <div class="suggestions">
+              <button type="button" class="chip" data-question="Which system change preceded the March payment delays, and which services were affected?">March outage</button>
+              <button type="button" class="chip" data-question="Was the March delay caused by an OrbitalNet outage or by the ledger-service deploy?">Contradiction</button>
+              <button type="button" class="chip" data-question="What was the exact revenue loss in USD from incident INC-1842?">Missing fact</button>
+            </div>
+          </form>
+          <div id="ask-error" class="banner error" hidden></div>
+          <div id="ask-loading" class="banner" hidden>Reading evidence and drafting a cited answer…</div>
+          <article id="answer" class="answer" hidden></article>
+        </section>
+
+        <section id="view-documents" hidden>
+          <div class="docs-head">
+            <div>
+              <h2>Documents</h2>
+              <p class="muted">Add PDF, DOCX, HTML, Markdown, text, JSON, or JSONL. Exact and near duplicates are kept out of the index.</p>
+            </div>
+          </div>
+          <div class="upload-grid">
+            <form id="upload-form" class="panel">
+              <h3>Upload a file</h3>
+              <input id="file" name="file" type="file" accept=".pdf,.docx,.html,.htm,.md,.markdown,.txt,.json,.jsonl" required />
+              <label class="check"><input type="checkbox" id="force" /> Index even if it looks like a duplicate</label>
+              <button type="submit" class="primary">Add to corpus</button>
+              <p id="upload-message" class="muted"></p>
+            </form>
+            <form id="paste-form" class="panel">
+              <h3>Paste text</h3>
+              <input id="paste-title" type="text" placeholder="Title" required />
+              <textarea id="paste-text" rows="5" placeholder="Source text" required></textarea>
+              <button type="submit" class="primary">Add text</button>
+              <p id="paste-message" class="muted"></p>
+            </form>
+          </div>
+          <div class="docs-tools">
+            <input id="doc-query" type="search" placeholder="Filter by title or source" />
+          </div>
+          <div id="doc-error" class="banner error" hidden></div>
+          <div id="doc-list" class="doc-list"></div>
+          <div class="pager">
+            <button type="button" id="prev-page" class="ghost">Previous</button>
+            <span id="page-label" class="muted"></span>
+            <button type="button" id="next-page" class="ghost">Next</button>
+          </div>
+          <article id="doc-detail" class="panel detail" hidden></article>
+        </section>
+
+        <section id="view-evaluation" hidden>
+          <h2>Evaluation</h2>
+          <p class="muted">Recall@5, MRR, answer correctness, and citation accuracy for two configurations.</p>
+          <div id="eval-body" class="panel">Loading the latest report…</div>
+        </section>
+
+        <section id="view-method" hidden>
+          <h2>How an answer is built</h2>
+          <ol class="method">
+            <li><strong>Ingest.</strong> Text and metadata come out of PDF, DOCX, HTML, and plain-text files. Two chunkers run: sentence packing and a fixed window. Exact SHA-256 duplicates and near duplicates (simhash within Hamming distance 3) are not indexed twice.</li>
+            <li><strong>Index.</strong> Chunks are embedded with MiniLM and stored in Chroma. A separate Okapi BM25 index, written for this project, handles keywords.</li>
+            <li><strong>Rank.</strong> Evidence Coverage Rank Fusion is our ranker. It fuses the two lists with reciprocal rank, adds a coverage bonus, penalizes near-duplicate chunks, and prefers evidence from more than one document.</li>
+            <li><strong>Investigate.</strong> The agent calls <code>search_evidence</code>, follows bridge entities for a second hop, and calls <code>detect_contradictions</code>. The model may request one more tool call.</li>
+            <li><strong>Answer.</strong> The draft must cite chunk ids from that evidence. Uncited claims and invented numbers are dropped. Thin or conflicting evidence is labeled, not papered over.</li>
+          </ol>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

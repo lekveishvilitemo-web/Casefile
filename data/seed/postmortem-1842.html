@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head><title>Postmortem INC-1842</title></head>
+<body>
+<h1>Postmortem INC-1842</h1>
+<p>The March payment delay was caused by the ledger-service v2.4.1 deploy on 2 March 2024, which cut retries from 5 to 1.</p>
+<p>Affected services were checkout-api, settlement-worker, and merchant-notifier.</p>
+<p>Mitigation was a rollback of ledger-service to v2.3.9 at 2024-03-06 11:40 UTC.</p>
+<p>Documents that confirm the timeline are the change log, this postmortem, and the SRE timeline.</p>
+<p>The postmortem does not contain a dollar estimate of lost revenue.</p>
+</body>
+</html>

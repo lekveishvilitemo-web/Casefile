@@ -1,0 +1,9 @@
+.venv
+__pycache__
+.pytest_cache
+.git
+data/uploads
+data/models
+*.gguf
+tests
+**/__pycache__

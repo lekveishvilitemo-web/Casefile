@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.env
+data/chroma/
+data/casefile.db
+data/casefile.db-*
+data/uploads/
+data/models/
+data/corpus/hotpot_paragraphs.jsonl
+data/evaluation_full.json
+*.gguf
+.hf-cache/

@@ -1,0 +1,8 @@
+Incident INC-1842
+
+Payment processing delays began on 2024-03-04 at 06:12 UTC and continued until the rollback on 2024-03-06 at 11:40 UTC.
+During incident INC-1842, checkout-api p95 latency reached 18 seconds and payment processing was delayed.
+settlement-worker accumulated a backlog of unsettled transfers.
+merchant-notifier delivered webhooks late and was degraded, but it did not go fully offline.
+The primary cause recorded by SRE is the ledger-service v2.4.1 deploy.
+This incident report does not name the on-call engineer and does not state a revenue loss.

@@ -1,0 +1,5 @@
+Finance operations note, 2024-03-08.
+
+Finance ops recorded that only settlement-worker was affected and checkout-api remained within SLO the entire week.
+No revenue figure was available for this note. Do not infer a dollar loss from this document.
+The note was written by the finance operations desk and was not reviewed by SRE.

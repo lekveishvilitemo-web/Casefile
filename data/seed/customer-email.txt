@@ -1,0 +1,4 @@
+Hello, our shop's card payments were slow for a couple of days in early March.
+We do not know which of your systems broke.
+Please tell us when it is safe to retry payouts.
+This email does not identify a root cause, a service name, or a revenue number.

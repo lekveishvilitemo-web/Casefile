@@ -147,9 +147,11 @@ https://money-findarticles-expensive-shipping.trycloudflare.com
 
 That address is a Cloudflare quick tunnel in front of this machine. It has no uptime guarantee and it stops when the machine stops. It is the public URL available for review right now. It is not a Hugging Face Space or a Render service: this environment has no token for either, and the index is about 2 GB (SQLite, Chroma, and the GGUF), which is too large to commit.
 
-The app is a single container. `Dockerfile` installs the Python dependencies and downloads the GGUF model. Chroma and SQLite must be on a disk that survives restart. On a platform with an ephemeral disk, bake `data/casefile.db` and `data/chroma/` into the image (they are produced by `scripts/build_corpus.py`) so the 50,000-paragraph corpus comes back after a cold start. User uploads survive a restart only when `DATA_DIR` is a persistent disk. A durable free host is a Hugging Face Docker Space (CPU basic) or the Render service in `render.yaml`. Both sleep when idle. Set the port from `PORT`. Hugging Face Spaces expect 7860, which is the image default. Copy the built `data/casefile.db` and `data/chroma/` onto the persistent disk, or let the image build them, before treating that host as the submission URL.
+The app is a single container. `Dockerfile` installs the Python dependencies and downloads the GGUF model. Chroma and SQLite must be on a disk that survives restart. On a platform with an ephemeral disk, bake `data/casefile.db` and `data/chroma/` into the image (they are produced by `scripts/build_corpus.py`) so the 50,000-paragraph corpus comes back after a cold start. User uploads survive a restart only when `DATA_DIR` is a persistent disk. Set the port from `PORT`. Hugging Face Spaces expect 7860, which is the image default.
 
-Recommended free host: a Hugging Face Docker Space (CPU basic). It sleeps when idle, which is acceptable. Render's free web service works from `render.yaml` and also sleeps. Set the port from `PORT`. Hugging Face Spaces expect 7860, which is the image default.
+A Static Hugging Face Space cannot run this app: it only serves files, and Casefile is a Python process. As of October 2026, a Gradio or Docker Space on the free CPU Basic hardware requires a paid Hugging Face plan (PRO for a personal account). The CPU Basic machine itself has no hourly charge once that plan is active: 2 vCPU, 16 GB of memory, 50 GB of disk. A question loads the local model and the process uses about 3.5 GB, so the free 512 MB instances on Render (`render.yaml`) and Koyeb cannot hold the 50,009-document index.
+
+The durable free machine that can hold it is an Oracle Cloud Always Free Arm VM (on the order of 12 GB of memory and a persistent disk). Sign-up uses a card for identity and does not charge the Always Free shape. Create the instance, install Python 3.12, clone this repo, run `scripts/download_model.py` and `scripts/build_corpus.py`, and start `uvicorn app.main:app --host 0.0.0.0 --port 7860`. Open that port in the Oracle security list. The disk keeps the index across a reboot.
 
 Secrets stay in the host's environment, not in the image. `.env.example` lists them. Do not commit `.env`.
 
@@ -158,7 +160,7 @@ Cost, on the free path:
 - Embeddings and the local model run on CPU. No per-token bill.
 - A Groq free key is optional. A typical question sends well under 2,000 input tokens and asks for at most 500 output tokens, two calls (a tool decision and the draft).
 - Chroma's index for this subset is local. No Qdrant or Pinecone invoice.
-- The practical limits are CPU answer latency (the 1.5B model), the Space sleeping, and unauthenticated Hugging Face download rate limits while building the corpus.
+- The practical limits are CPU answer latency (the 1.5B model), a Space sleeping when the host allows sleep, and unauthenticated Hugging Face download rate limits while building the corpus. A Static Space is not a substitute. The tunnel above is the public URL until an Oracle VM or a Hugging Face PRO Docker Space is running.
 
 ## Tests
 

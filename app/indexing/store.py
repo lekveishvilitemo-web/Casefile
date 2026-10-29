@@ -440,6 +440,22 @@ class DocumentStore:
             ).fetchone()["n"]
         )
 
+    def iter_chunk_texts(self, strategy: str | None = None):
+        """Stream id, text, and strategy without holding every chunk row."""
+        if strategy is None:
+            cursor = self._conn.execute("SELECT id, text, strategy FROM chunks")
+        else:
+            cursor = self._conn.execute(
+                "SELECT id, text, strategy FROM chunks WHERE strategy = ?",
+                (strategy,),
+            )
+        while True:
+            batch = cursor.fetchmany(2000)
+            if not batch:
+                break
+            for row in batch:
+                yield row["id"], row["text"], row["strategy"]
+
     def iter_chunks(self, strategy: str | None = None) -> list[ChunkRow]:
         if strategy is None:
             rows = self._conn.execute("SELECT * FROM chunks").fetchall()

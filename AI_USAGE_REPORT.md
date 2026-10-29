@@ -8,6 +8,7 @@ This project was built in Cursor by a cloud agent (Grok 4.7) from the Talent Gro
 - Chose the stack: FastAPI, Chroma, FastEmbed MiniLM, a local Qwen GGUF fallback, and HotpotQA plus a small contradictory seed case.
 - Wrote the ingestion, the two chunkers, simhash dedup, Okapi BM25, Evidence Coverage Rank Fusion, the tool-calling agent, the citation and abstention checks, the HTTP API, and the interface.
 - Wrote the corpus builder, the evaluation harness, the tests, the Dockerfile, and this documentation.
+- Ran `scripts/evaluate.py` on the 50,009-document index with the local 1.5B model and wrote `EVALUATION_REPORT.md` from those scores. After the first pass abstained on facts that were already in the retrieved chunks, the assistant changed citation binding so an uncited claim is kept only when a retrieved chunk contains it. The author should still be able to explain that change.
 
 ## What was not delegated to a library
 

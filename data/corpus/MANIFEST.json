@@ -1,0 +1,21 @@
+{
+  "documents": 50009,
+  "chunks": 168016,
+  "hotpot_indexed_this_run": 50000,
+  "seed": {
+    "added": 9,
+    "skipped": [
+      {
+        "file": "incident-report-INC-1842.txt",
+        "reason": "near_duplicate",
+        "duplicate_of": "doc_19238e434d77"
+      }
+    ]
+  },
+  "eval_questions": 44,
+  "target": 50000,
+  "dataset": "hotpotqa/hotpot_qa",
+  "config": "distractor",
+  "split": "train",
+  "subset_rule": "First unique paragraphs in streaming train order until CORPUS_TARGET."
+}

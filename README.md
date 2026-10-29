@@ -141,7 +141,13 @@ The written analysis is `EVALUATION_REPORT.md`.
 
 ## Deployment
 
-The app is a single container. `Dockerfile` installs the Python dependencies and downloads the GGUF model. Chroma and SQLite must be on a disk that survives restart. On a platform with an ephemeral disk, bake `data/casefile.db` and `data/chroma/` into the image (they are produced by `scripts/build_corpus.py`) so the 50,000-paragraph corpus comes back after a cold start. User uploads survive a restart only when `DATA_DIR` is a persistent disk.
+The scored index is running, with the local model, at:
+
+https://money-findarticles-expensive-shipping.trycloudflare.com
+
+That address is a Cloudflare quick tunnel in front of this machine. It has no uptime guarantee and it stops when the machine stops. It is the public URL available for review right now. It is not a Hugging Face Space or a Render service: this environment has no token for either, and the index is about 2 GB (SQLite, Chroma, and the GGUF), which is too large to commit.
+
+The app is a single container. `Dockerfile` installs the Python dependencies and downloads the GGUF model. Chroma and SQLite must be on a disk that survives restart. On a platform with an ephemeral disk, bake `data/casefile.db` and `data/chroma/` into the image (they are produced by `scripts/build_corpus.py`) so the 50,000-paragraph corpus comes back after a cold start. User uploads survive a restart only when `DATA_DIR` is a persistent disk. A durable free host is a Hugging Face Docker Space (CPU basic) or the Render service in `render.yaml`. Both sleep when idle. Set the port from `PORT`. Hugging Face Spaces expect 7860, which is the image default. Copy the built `data/casefile.db` and `data/chroma/` onto the persistent disk, or let the image build them, before treating that host as the submission URL.
 
 Recommended free host: a Hugging Face Docker Space (CPU basic). It sleeps when idle, which is acceptable. Render's free web service works from `render.yaml` and also sleeps. Set the port from `PORT`. Hugging Face Spaces expect 7860, which is the image default.
 

@@ -10,5 +10,6 @@ data/uploads/
 data/models/
 data/corpus/hotpot_paragraphs.jsonl
 data/evaluation_full.json
+data/evaluation_checkpoint.jsonl
 *.gguf
 .hf-cache/

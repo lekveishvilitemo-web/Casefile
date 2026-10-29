@@ -35,8 +35,8 @@ class Engine:
         self._load_bm25()
 
     def _load_bm25(self) -> None:
-        for chunk in self.store.iter_chunks():
-            self.bm25.add(chunk.id, chunk.text, chunk.strategy)
+        for chunk_id, text, strategy in self.store.iter_chunk_texts():
+            self.bm25.add(chunk_id, text, strategy)
 
     def search(self, query: str, *, strategy: str, retrieval: str, k: int) -> list[dict]:
         embedding = self.embedder.embed_query(query)
@@ -133,7 +133,7 @@ class Engine:
         if retrieval not in {"hybrid", "semantic"}:
             raise ValueError("retrieval must be hybrid or semantic.")
         cache_key = hashlib.sha256(
-            f"{self.store.corpus_version()}|{strategy}|{retrieval}|{question}".encode("utf-8")
+            f"{self.store.corpus_version()}|cite5|{strategy}|{retrieval}|{question}".encode("utf-8")
         ).hexdigest()
         cached = self.store.cache_get(cache_key)
         if cached is not None:

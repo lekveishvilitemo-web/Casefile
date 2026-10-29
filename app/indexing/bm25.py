@@ -2,12 +2,15 @@
 
 score(D, Q) = sum_i IDF(q_i) * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * |D| / avgdl))
 IDF(q) = ln((N - n_q + 0.5) / (n_q + 0.5) + 1)
+
+Postings use integer document ids. A dict of chunk-id strings per term does
+not fit comfortably next to the vector index and a local model at 168k chunks.
 """
 
 from __future__ import annotations
 
 import math
-from collections import Counter, defaultdict
+from collections import Counter
 
 from app.textutil import tokenize
 
@@ -16,54 +19,73 @@ class BM25Index:
     def __init__(self, k1: float = 1.4, b: float = 0.75) -> None:
         self.k1 = k1
         self.b = b
-        self._postings: dict[str, dict[str, int]] = defaultdict(dict)
-        self._doc_len: dict[str, int] = {}
-        self._strategy: dict[str, str] = {}
+        self._postings: dict[str, list[tuple[int, int]]] = {}
+        self._doc_len: list[int] = []
+        self._strategy: list[str] = []
+        self._terms: list[list[str]] = []
+        self._rev: list[str] = []
+        self._ids: dict[str, int] = {}
         self._total_len = 0
+        self._alive = 0
 
     def __len__(self) -> int:
-        return len(self._doc_len)
+        return self._alive
 
     @property
     def avgdl(self) -> float:
-        if not self._doc_len:
+        if self._alive == 0:
             return 0.0
-        return self._total_len / len(self._doc_len)
+        return self._total_len / self._alive
 
     def add(self, chunk_id: str, text: str, strategy: str) -> None:
-        if chunk_id in self._doc_len:
+        if chunk_id in self._ids:
             self.remove(chunk_id)
         counts = Counter(tokenize(text, drop_stopwords=True))
         length = sum(counts.values())
-        self._doc_len[chunk_id] = length
-        self._strategy[chunk_id] = strategy
-        self._total_len += length
+        index = len(self._rev)
+        self._ids[chunk_id] = index
+        self._rev.append(chunk_id)
+        self._doc_len.append(length)
+        self._strategy.append(strategy)
+        terms: list[str] = []
         for term, freq in counts.items():
-            self._postings[term][chunk_id] = freq
+            posting = self._postings.get(term)
+            if posting is None:
+                self._postings[term] = [(index, freq)]
+            else:
+                posting.append((index, freq))
+            terms.append(term)
+        self._terms.append(terms)
+        self._total_len += length
+        self._alive += 1
 
     def remove(self, chunk_id: str) -> None:
-        length = self._doc_len.pop(chunk_id, None)
-        self._strategy.pop(chunk_id, None)
-        if length is None:
+        index = self._ids.pop(chunk_id, None)
+        if index is None:
             return
+        length = self._doc_len[index]
+        self._doc_len[index] = -1
         self._total_len -= length
-        empty_terms: list[str] = []
-        for term, posting in self._postings.items():
-            if chunk_id in posting:
-                del posting[chunk_id]
-                if not posting:
-                    empty_terms.append(term)
-        for term in empty_terms:
-            del self._postings[term]
+        self._alive -= 1
+        for term in self._terms[index]:
+            posting = self._postings.get(term)
+            if not posting:
+                continue
+            kept = [item for item in posting if item[0] != index]
+            if kept:
+                self._postings[term] = kept
+            else:
+                del self._postings[term]
+        self._terms[index] = []
 
     def search(
         self, query: str, k: int = 20, strategy: str | None = None
     ) -> list[tuple[str, float]]:
         terms = tokenize(query, drop_stopwords=True)
-        if not terms or not self._doc_len:
+        if not terms or self._alive == 0:
             return []
-        scores: dict[str, float] = defaultdict(float)
-        n_docs = len(self._doc_len)
+        scores: dict[str, float] = {}
+        n_docs = self._alive
         avgdl = self.avgdl or 1.0
         seen: set[str] = set()
         for term in terms:
@@ -75,11 +97,14 @@ class BM25Index:
                 continue
             n_q = len(posting)
             idf = math.log((n_docs - n_q + 0.5) / (n_q + 0.5) + 1.0)
-            for chunk_id, freq in posting.items():
-                if strategy is not None and self._strategy.get(chunk_id) != strategy:
+            for index, freq in posting:
+                doc_len = self._doc_len[index]
+                if doc_len < 0:
                     continue
-                doc_len = self._doc_len.get(chunk_id, 0)
+                if strategy is not None and self._strategy[index] != strategy:
+                    continue
                 denom = freq + self.k1 * (1 - self.b + self.b * doc_len / avgdl)
-                scores[chunk_id] += idf * (freq * (self.k1 + 1)) / (denom or 1.0)
+                chunk_id = self._rev[index]
+                scores[chunk_id] = scores.get(chunk_id, 0.0) + idf * (freq * (self.k1 + 1)) / (denom or 1.0)
         ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
         return [(chunk_id, score) for chunk_id, score in ranked[:k] if score > 0]

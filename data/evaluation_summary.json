@@ -1,0 +1,101 @@
+{
+  "summary": "Evaluated 44 questions with local (qwen2.5-1.5b-instruct-q4_k_m.gguf). hybrid_sentence answer correctness 0.283, Recall@5 0.673. semantic_fixed answer correctness 0.289, Recall@5 0.640.",
+  "configurations": [
+    {
+      "name": "hybrid_sentence",
+      "description": "Sentence packing, BM25 + vector fusion (ECRF), and a bridge-entity second hop.",
+      "metrics": {
+        "n": 44,
+        "recall_at_5": 0.6727642276422764,
+        "mrr": 0.7739837398373984,
+        "answer_correctness": 0.2826019234775919,
+        "citation_accuracy": 0.5121212121212122,
+        "by_type": {
+          "contradiction": {
+            "n": 2,
+            "recall_at_5": 1.0,
+            "mrr": 1.0,
+            "answer_correctness": 1.0,
+            "citation_accuracy": 0.8333333333333333
+          },
+          "injection": {
+            "n": 1,
+            "recall_at_5": 1.0,
+            "mrr": 0.5,
+            "answer_correctness": 1.0,
+            "citation_accuracy": 1.0
+          },
+          "multihop": {
+            "n": 35,
+            "recall_at_5": 0.6166666666666666,
+            "mrr": 0.7495238095238096,
+            "answer_correctness": 0.16217836785063677,
+            "citation_accuracy": 0.46190476190476193
+          },
+          "simple": {
+            "n": 3,
+            "recall_at_5": 1.0,
+            "mrr": 1.0,
+            "answer_correctness": 0.5860805860805861,
+            "citation_accuracy": 0.5666666666666667
+          },
+          "unanswerable": {
+            "n": 3,
+            "recall_at_5": null,
+            "mrr": null,
+            "answer_correctness": 0.6666666666666666,
+            "citation_accuracy": 0.6666666666666666
+          }
+        }
+      }
+    },
+    {
+      "name": "semantic_fixed",
+      "description": "Fixed windows and vector similarity only. No BM25 and no second hop.",
+      "metrics": {
+        "n": 44,
+        "recall_at_5": 0.6398373983739838,
+        "mrr": 0.7548780487804878,
+        "answer_correctness": 0.2886098836725796,
+        "citation_accuracy": 0.5397727272727273,
+        "by_type": {
+          "contradiction": {
+            "n": 2,
+            "recall_at_5": 1.0,
+            "mrr": 1.0,
+            "answer_correctness": 0.75,
+            "citation_accuracy": 0.5
+          },
+          "injection": {
+            "n": 1,
+            "recall_at_5": 1.0,
+            "mrr": 0.5,
+            "answer_correctness": 1.0,
+            "citation_accuracy": 1.0
+          },
+          "multihop": {
+            "n": 35,
+            "recall_at_5": 0.5780952380952381,
+            "mrr": 0.7271428571428571,
+            "answer_correctness": 0.24115980352433555,
+            "citation_accuracy": 0.5619047619047619
+          },
+          "simple": {
+            "n": 3,
+            "recall_at_5": 1.0,
+            "mrr": 1.0,
+            "answer_correctness": 0.25274725274725274,
+            "citation_accuracy": 0.3611111111111111
+          },
+          "unanswerable": {
+            "n": 3,
+            "recall_at_5": null,
+            "mrr": null,
+            "answer_correctness": 0.3333333333333333,
+            "citation_accuracy": 0.3333333333333333
+          }
+        }
+      }
+    }
+  ]
+}
